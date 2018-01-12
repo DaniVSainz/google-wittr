@@ -36,12 +36,14 @@ IndexController.prototype._registerServiceWorker = function() {
     });
   });
 
-  // TODO: listen for the controlling service worker changing
-  // and reload the page
-  navigator.serviceWorker.addEventListener('controllerchange', function(){
-    console.log('inside controllerChange');
+  // Ensure refresh is only called once.
+  // This works around a bug in "force update on reload".
+  var refreshing;
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (refreshing) return;
     window.location.reload();
-  })
+    refreshing = true;
+  });
 };
 
 IndexController.prototype._trackInstalling = function(worker) {
@@ -60,8 +62,7 @@ IndexController.prototype._updateReady = function(worker) {
 
   toast.answer.then(function(answer) {
     if (answer != 'refresh') return;
-    // TODO: tell the service worker to skipWaiting
-    worker.postMessage({action:"skipWaiting"});
+    worker.postMessage({action: 'skipWaiting'});
   });
 };
 
