@@ -76,6 +76,11 @@ IndexController.prototype._showCachedMessages = function() {
     // posts from IDB
     if (!db || indexController._postsView.showingPosts()) return;
 
+    var index = db.transaction('wittrs').objectStore('wittrs').index('by-date');
+    return index.getAll().then(function(messages){
+      indexController._postsView.addPosts(messages.reverse());
+    })
+    
     // TODO: get all of the wittr message objects from indexeddb,
     // then pass them to:
     // indexController._postsView.addPosts(messages)
