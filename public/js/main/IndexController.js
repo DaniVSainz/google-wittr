@@ -163,6 +163,13 @@ IndexController.prototype._onSocketMessage = function(data) {
       store.put(message);
     });
 
+    store.index('by-date').openCursor(null, 'prev').then(function(cursor){
+      return cursor.advance(30);
+    }).then(function deleteRest(cursor){
+      if (!cursor) return;
+      cursor.delete();
+      return cursor.continue().then(deleteRest);
+    })
     // TODO: keep the newest 30 entries in 'wittrs',
     // but delete the rest.
     //

@@ -112,7 +112,7 @@ dbPromise.then(function(db) {
   return cursor.advance(2);
 }).then(function logPerson(cursor) {
   if (!cursor) return;
-  console.log("Cursored at:", cursor.value.name);
+  console.log("Cursored at:", cursor);
   // I could also do things like:
   // cursor.update(newValue) to change the value, or
   // cursor.delete() to delete this entry
