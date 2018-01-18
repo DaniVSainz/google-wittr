@@ -159,46 +159,26 @@ IndexController.prototype._cleanImageCache = function() {
   return this._dbPromise.then(function(db) {
     if (!db) return;
 
-    // TODO: open the 'wittr' object store, get all the messages,
-    // gather all the photo urls.
-    var index = db.transaction('wittrs')
-      .objectStore('wittrs').index('by-date');
+    var imagesNeeded = [];
 
-
-
-    var messagePhotos = []; 
-    index.getAll().then(function(messages){
-        messages.forEach(function(message){
-        if (message.photo){
-          messagePhotos.push("http://localhost:8888"+message.photo);
+    var tx = db.transaction('wittrs');
+    return tx.objectStore('wittrs').getAll().then(function(messages) {
+      messages.forEach(function(message) {
+        if (message.photo) {
+          imagesNeeded.push(message.photo);
         }
-      })
-      return messagePhotos;
-    }).then(function(messagePhotos){
-      caches.open("wittr-content-imgs").then(function(cache) {
-        cache.keys().then(function(keys) {
-          // console.log(messagePhotos)
-          keys.forEach(function(request, index, array) {
-            // console.log(messagePhotos)
-            // var storageUrl = request.url.replace(/-\d+px\.jpg$/, '');
-            // console.log(request.url.replace(/-\d+px\.jpg$/, ''))
-            // console.log(messagePhotos)
-            console.log(messagePhotos.includes(request.url.replace(/-\d+px\.jpg$/, '')));
-            if(!messagePhotos.includes(request.url.replace(/-\d+px\.jpg$/, ''))){
-              cache.delete(request);
-            }
-            // cache.delete(request);
-            // console.log(array);
-            });
-          });
+        imagesNeeded.push(message.avatar);
+      });
+
+      return caches.open('wittr-content-imgs');
+    }).then(function(cache) {
+      return cache.keys().then(function(requests) {
+        requests.forEach(function(request) {
+          var url = new URL(request.url);
+          if (!imagesNeeded.includes(url.pathname)) cache.delete(request);
         });
-      })
-
-
-
-    //
-    // Open the 'wittr-content-imgs' cache, and delete any entry
-    // that you no longer need.
+      });
+    });
   });
 };
 
